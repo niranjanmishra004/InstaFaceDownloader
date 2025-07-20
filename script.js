@@ -1,79 +1,18 @@
+document.getElementById('downloadBtn').addEventListener('click', async () => {
+  const platform = document.getElementById('platform').value;
+  const url = document.getElementById('url').value;
+  const quality = document.getElementById('quality').value;
 
-document.addEventListener('DOMContentLoaded', function () {
-  const platformSelect = document.getElementById('platform');
-  const urlInput = document.getElementById('url');
-  const qualitySelect = document.getElementById('quality');
-  const downloadBtn = document.getElementById('downloadBtn');
-  const messageDiv = document.getElementById('message');
-  const container = document.querySelector('.container');
-
-  const API_BASE = "https://instaface-backend.onrender.com"; // ✅ LIVE backend URL (Replace only if your Render project URL is different)
-
-  updatePlatformStyle();
-  setCurrentYear();
-
-  platformSelect.addEventListener('change', updatePlatformStyle);
-  downloadBtn.addEventListener('click', handleDownload);
-
-  function updatePlatformStyle() {
-    const platform = platformSelect.value;
-    container.style.borderTop = `4px solid ${platform === 'facebook' ? '#4267B2' : '#E1306C'}`;
+  if (!url) {
+    alert('Please enter a valid URL');
+    return;
   }
 
-  function setCurrentYear() {
-    const yearElement = document.getElementById('currentYear');
-    if (yearElement) {
-      yearElement.textContent = new Date().getFullYear();
-    }
-  }
+  const API_BASE = window.location.hostname === "localhost"
+    ? "http://localhost:3000"
+    : "https://instafacedownloader.onrender.com";
 
-  async function handleDownload() {
-    const platform = platformSelect.value;
-    const url = urlInput.value.trim();
-    const quality = qualitySelect.value;
-
-    if (!validateInputs(platform, url)) return;
-
-    try {
-      showLoadingState(true);
-
-      const videoData = await fetchVideoData(platform, url, quality);
-
-      showMessage('Video ready for download!', 'success');
-
-      const a = document.createElement('a');
-      a.href = videoData.url;
-      a.download = `video_${Date.now()}.mp4`;
-      a.click();
-
-      setTimeout(() => URL.revokeObjectURL(videoData.url), 100);
-    } catch (error) {
-      showMessage(error.message || 'Download failed. Please try again.', 'error');
-    } finally {
-      showLoadingState(false);
-    }
-  }
-
-  function validateInputs(platform, url) {
-    if (!url) {
-      showMessage('Please enter a valid URL', 'error');
-      return false;
-    }
-
-    if (platform === 'instagram' && !url.includes('instagram.com')) {
-      showMessage('Please enter a valid Instagram URL', 'error');
-      return false;
-    }
-
-    if (platform === 'facebook' && !url.includes('facebook.com')) {
-      showMessage('Please enter a valid Facebook URL', 'error');
-      return false;
-    }
-
-    return true;
-  }
-
-  async function fetchVideoData(platform, url, quality) {
+  try {
     const response = await fetch(`${API_BASE}/api/download`, {
       method: 'POST',
       headers: {
@@ -84,34 +23,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const data = await response.json();
 
-    if (!data.success) {
-      throw new Error(data.message || 'Failed to fetch video');
-    }
-
-    const blob = await fetch(data.videoUrl).then(res => res.blob());
-    const objectUrl = URL.createObjectURL(blob);
-
-    return {
-      success: true,
-      url: objectUrl
-    };
-  }
-
-  function showLoadingState(isLoading) {
-    if (isLoading) {
-      downloadBtn.disabled = true;
-      downloadBtn.innerHTML = '<div class="loading"></div> Processing...';
+    if (data.success && data.videoUrl) {
+      const downloadLink = document.getElementById('downloadLink');
+      downloadLink.href = data.videoUrl;
+      downloadLink.style.display = 'inline-block';
     } else {
-      downloadBtn.disabled = false;
-      downloadBtn.innerHTML = '<span id="btnText">Download Video</span> <i class="fas fa-download"></i>';
+      alert(data.message || 'Failed to fetch video');
     }
-  }
-
-  function showMessage(text, type) {
-    messageDiv.textContent = text;
-    messageDiv.className = type;
-    messageDiv.style.display = 'block';
+  } catch (error) {
+    console.error(error);
+    alert('Error while downloading video. Please try again.');
   }
 });
-
-
