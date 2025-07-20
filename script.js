@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
   const platformSelect = document.getElementById('platform');
   const urlInput = document.getElementById('url');
   const qualitySelect = document.getElementById('quality');
@@ -33,8 +33,27 @@ document.addEventListener('DOMContentLoaded', function() {
 
     try {
       showLoadingState(true);
-      const videoData = await fetchVideoData(platform, url, quality);
-      handleDownloadSuccess(videoData);
+
+      const response = await fetch('http://localhost:3000/api/download', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ platform, url, quality })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch video from server');
+      }
+
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+
+      showMessage('Video ready for download!', 'success');
+      const a = document.createElement('a');
+      a.href = objectUrl;
+      a.download = `video_${Date.now()}.mp4`;
+      a.click();
+
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 100);
     } catch (error) {
       showMessage(error.message || 'Download failed. Please try again.', 'error');
     } finally {
@@ -61,35 +80,6 @@ document.addEventListener('DOMContentLoaded', function() {
     return true;
   }
 
-  async function fetchVideoData(platform, url, quality) {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        const isSuccess = Math.random() > 0.2;
-        if (isSuccess) {
-          const blob = new Blob([`Dummy ${platform} video content`], { type: 'video/mp4' });
-          const objectUrl = URL.createObjectURL(blob);
-          resolve({
-            success: true,
-            url: objectUrl
-          });
-        } else {
-          reject(new Error('Video unavailable or URL invalid'));
-        }
-      }, 1500);
-    });
-  }
-
-  function handleDownloadSuccess(videoData) {
-    showMessage('Video ready for download!', 'success');
-
-    const a = document.createElement('a');
-    a.href = videoData.url;
-    a.download = `video_${Date.now()}.mp4`;
-    a.click();
-
-    setTimeout(() => URL.revokeObjectURL(videoData.url), 100);
-  }
-
   function showLoadingState(isLoading) {
     if (isLoading) {
       downloadBtn.disabled = true;
@@ -106,3 +96,4 @@ document.addEventListener('DOMContentLoaded', function() {
     messageDiv.style.display = 'block';
   }
 });
+
