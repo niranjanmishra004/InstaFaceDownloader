@@ -1,3 +1,4 @@
+
 document.addEventListener('DOMContentLoaded', function () {
   const platformSelect = document.getElementById('platform');
   const urlInput = document.getElementById('url');
@@ -5,6 +6,8 @@ document.addEventListener('DOMContentLoaded', function () {
   const downloadBtn = document.getElementById('downloadBtn');
   const messageDiv = document.getElementById('message');
   const container = document.querySelector('.container');
+
+  const API_BASE = "https://instaface-backend.onrender.com"; // ✅ LIVE backend URL (Replace only if your Render project URL is different)
 
   updatePlatformStyle();
   setCurrentYear();
@@ -71,7 +74,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   async function fetchVideoData(platform, url, quality) {
-    const response = await fetch('http://localhost:3000/api/download', {
+    const response = await fetch(`${API_BASE}/api/download`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -85,7 +88,6 @@ document.addEventListener('DOMContentLoaded', function () {
       throw new Error(data.message || 'Failed to fetch video');
     }
 
-    // For client-side download
     const blob = await fetch(data.videoUrl).then(res => res.blob());
     const objectUrl = URL.createObjectURL(blob);
 
@@ -111,6 +113,5 @@ document.addEventListener('DOMContentLoaded', function () {
     messageDiv.style.display = 'block';
   }
 });
-
 
 
