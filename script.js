@@ -33,27 +33,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     try {
       showLoadingState(true);
-
-      const response = await fetch('http://localhost:3000/api/download', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ platform, url, quality })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch video from server');
-      }
-
-      const blob = await response.blob();
-      const objectUrl = URL.createObjectURL(blob);
-
-      showMessage('Video ready for download!', 'success');
-      const a = document.createElement('a');
-      a.href = objectUrl;
-      a.download = `video_${Date.now()}.mp4`;
-      a.click();
-
-      setTimeout(() => URL.revokeObjectURL(objectUrl), 100);
+      const videoData = await fetchVideoData(platform, url, quality);
+      handleDownloadSuccess(videoData.url);
     } catch (error) {
       showMessage(error.message || 'Download failed. Please try again.', 'error');
     } finally {
@@ -80,6 +61,36 @@ document.addEventListener('DOMContentLoaded', function () {
     return true;
   }
 
+  async function fetchVideoData(platform, url, quality) {
+    const response = await fetch('/api/download', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ platform, url, quality })
+    });
+
+    const data = await response.json();
+
+    if (!data.success) {
+      throw new Error(data.message || 'Failed to fetch video');
+    }
+
+    return {
+      success: true,
+      url: data.videoUrl
+    };
+  }
+
+  function handleDownloadSuccess(videoUrl) {
+    showMessage('Video ready for download!', 'success');
+    const a = document.createElement('a');
+    a.href = videoUrl;
+    a.download = `video_${Date.now()}.mp4`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(videoUrl), 100);
+  }
+
   function showLoadingState(isLoading) {
     if (isLoading) {
       downloadBtn.disabled = true;
@@ -96,4 +107,6 @@ document.addEventListener('DOMContentLoaded', function () {
     messageDiv.style.display = 'block';
   }
 });
+
+
 
