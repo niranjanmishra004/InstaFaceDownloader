@@ -1,108 +1,84 @@
-document.addEventListener('DOMContentLoaded', function() {
-  const platformSelect = document.getElementById('platform');
-  const urlInput = document.getElementById('url');
-  const qualitySelect = document.getElementById('quality');
-  const downloadBtn = document.getElementById('downloadBtn');
-  const messageDiv = document.getElementById('message');
-  const container = document.querySelector('.container');
+const express = require('express');
+const axios = require('axios');
+const cheerio = require('cheerio');
+const fs = require('fs');
+const path = require('path');
+const cors = require('cors');
 
-  updatePlatformStyle();
-  setCurrentYear();
+// Initialize Express
+const app = express();
+app.use(cors());
+app.use(express.json());
+app.use(express.static('public'));
 
-  platformSelect.addEventListener('change', updatePlatformStyle);
-  downloadBtn.addEventListener('click', handleDownload);
+// Serve HTML
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/index.html'));
+});
 
-  function updatePlatformStyle() {
-    const platform = platformSelect.value;
-    container.style.borderTop = `4px solid ${platform === 'facebook' ? '#4267B2' : '#E1306C'}`;
-  }
-
-  function setCurrentYear() {
-    const yearElement = document.getElementById('currentYear');
-    if (yearElement) {
-      yearElement.textContent = new Date().getFullYear();
-    }
-  }
-
-  async function handleDownload() {
-    const platform = platformSelect.value;
-    const url = urlInput.value.trim();
-    const quality = qualitySelect.value;
-
-    if (!validateInputs(platform, url)) return;
-
-    try {
-      showLoadingState(true);
-      const videoData = await fetchVideoData(platform, url, quality);
-      handleDownloadSuccess(videoData);
-    } catch (error) {
-      showMessage(error.message || 'Download failed. Please try again.', 'error');
-    } finally {
-      showLoadingState(false);
-    }
-  }
-
-  function validateInputs(platform, url) {
-    if (!url) {
-      showMessage('Please enter a valid URL', 'error');
-      return false;
-    }
-
-    if (platform === 'instagram' && !url.includes('instagram.com')) {
-      showMessage('Please enter a valid Instagram URL', 'error');
-      return false;
-    }
-
-    if (platform === 'facebook' && !url.includes('facebook.com')) {
-      showMessage('Please enter a valid Facebook URL', 'error');
-      return false;
-    }
-
-    return true;
-  }
-
-  async function fetchVideoData(platform, url, quality) {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        const isSuccess = Math.random() > 0.2;
-        if (isSuccess) {
-          const blob = new Blob([`Dummy ${platform} video content`], { type: 'video/mp4' });
-          const objectUrl = URL.createObjectURL(blob);
-          resolve({
-            success: true,
-            url: objectUrl
-          });
-        } else {
-          reject(new Error('Video unavailable or URL invalid'));
-        }
-      }, 1500);
-    });
-  }
-
-  function handleDownloadSuccess(videoData) {
-    showMessage('Video ready for download!', 'success');
-
-    const a = document.createElement('a');
-    a.href = videoData.url;
-    a.download = `video_${Date.now()}.mp4`;
-    a.click();
-
-    setTimeout(() => URL.revokeObjectURL(videoData.url), 100);
-  }
-
-  function showLoadingState(isLoading) {
-    if (isLoading) {
-      downloadBtn.disabled = true;
-      downloadBtn.innerHTML = '<div class="loading"></div> Processing...';
+// API Endpoint
+app.post('/api/download', async (req, res) => {
+  const { platform, url } = req.body;
+  
+  try {
+    let videoUrl;
+    if (platform === 'instagram') {
+      videoUrl = await getInstagramVideo(url);
+    } else if (platform === 'facebook') {
+      videoUrl = await getFacebookVideo(url);
     } else {
-      downloadBtn.disabled = false;
-      downloadBtn.innerHTML = '<span id="btnText">Download Video</span> <i class="fas fa-download"></i>';
+      return res.status(400).json({ error: 'Invalid platform' });
     }
-  }
 
-  function showMessage(text, type) {
-    messageDiv.textContent = text;
-    messageDiv.className = type;
-    messageDiv.style.display = 'block';
+    // Stream the video directly
+    const response = await axios({
+      method: 'get',
+      url: videoUrl,
+      responseType: 'stream'
+    });
+
+    res.setHeader('Content-Type', 'video/mp4');
+    res.setHeader('Content-Disposition', `attachment; filename="${platform}_video.mp4"`);
+    response.data.pipe(res);
+
+  } catch (error) {
+    console.error('Download error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Instagram Downloader
+async function getInstagramVideo(url) {
+  const postId = url.split('/')[4];
+  const apiUrl = `https://www.instagram.com/p/${postId}/?__a=1`;
+  
+  const response = await axios.get(apiUrl);
+  if (!response.data.graphql.shortcode_media.is_video) {
+    throw new Error('This post contains no video');
+  }
+  return response.data.graphql.shortcode_media.video_url;
+}
+
+// Facebook Downloader
+async function getFacebookVideo(url) {
+  const response = await axios.get(url);
+  const $ = cheerio.load(response.data);
+  const videoUrl = $('meta[property="og:video"]').attr('content');
+  
+  if (!videoUrl) {
+    throw new Error('Could not extract video URL');
+  }
+  return videoUrl;
+}
+
+// Start Server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+  
+  // Auto-open browser (development only)
+  if (process.env.NODE_ENV !== 'production') {
+    const { exec } = require('child_process');
+    exec(`start http://localhost:${PORT}`);
   }
 });
