@@ -33,8 +33,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
     try {
       showLoadingState(true);
+
       const videoData = await fetchVideoData(platform, url, quality);
-      handleDownloadSuccess(videoData.url);
+
+      showMessage('Video ready for download!', 'success');
+
+      const a = document.createElement('a');
+      a.href = videoData.url;
+      a.download = `video_${Date.now()}.mp4`;
+      a.click();
+
+      setTimeout(() => URL.revokeObjectURL(videoData.url), 100);
     } catch (error) {
       showMessage(error.message || 'Download failed. Please try again.', 'error');
     } finally {
@@ -62,7 +71,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   async function fetchVideoData(platform, url, quality) {
-    const response = await fetch('/api/download', {
+    const response = await fetch('http://localhost:3000/api/download', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -76,19 +85,14 @@ document.addEventListener('DOMContentLoaded', function () {
       throw new Error(data.message || 'Failed to fetch video');
     }
 
+    // For client-side download
+    const blob = await fetch(data.videoUrl).then(res => res.blob());
+    const objectUrl = URL.createObjectURL(blob);
+
     return {
       success: true,
-      url: data.videoUrl
+      url: objectUrl
     };
-  }
-
-  function handleDownloadSuccess(videoUrl) {
-    showMessage('Video ready for download!', 'success');
-    const a = document.createElement('a');
-    a.href = videoUrl;
-    a.download = `video_${Date.now()}.mp4`;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(videoUrl), 100);
   }
 
   function showLoadingState(isLoading) {
