@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InstaFaceDownloader - Download Videos from Instagram & Facebook</title>
+  <meta name="description" content="Free online tool to download videos from Instagram and Facebook in HD quality">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>
+      <i class="fas fa-cloud-download-alt"></i> InstaFaceDownloader
+    </h1>
+    
+    <div class="form-group">
+      <label for="platform">Choose Platform:</label>
+      <select id="platform">
+        <option value="facebook"><i class="fab fa-facebook"></i> Facebook</option>
+        <option value="instagram"><i class="fab fa-instagram"></i> Instagram</option>
+      </select>
+    </div>
+    
+    <div class="form-group">
+      <label for="url">Enter Video URL:</label>
+      <input type="text" id="url" placeholder="Paste video link here (e.g., https://www.instagram.com/p/...)">
+    </div>
+    
+    <div class="form-group">
+      <label for="quality">Select Quality:</label>
+      <select id="quality">
+        <option value="auto">Auto (Best available)</option>
+        <option value="480">480p (SD)</option>
+        <option value="720">720p (HD)</option>
+        <option value="1080">1080p (Full HD)</option>
+      </select>
+    </div>
+    
+    <button id="downloadBtn">
+      <span id="btnText">Download Video</span>
+      <i class="fas fa-download"></i>
+    </button>
+    
+    <div id="message"></div>
+    
+    <div class="features">
+      <div class="feature">
+        <i class="fas fa-bolt"></i>
+        <h3>Fast Downloads</h3>
+        <p>High-speed downloads with our optimized servers</p>
+      </div>
+      <div class="feature">
+        <i class="fas fa-lock"></i>
+        <h3>Secure</h3>
+        <p>No login required. We don't store your data</p>
+      </div>
+      <div class="feature">
+        <i class="fas fa-highlighter"></i>
+        <h3>High Quality</h3>
+        <p>Download videos in up to 1080p resolution</p>
+      </div>
+      <div class="feature">
+        <i class="fas fa-money-bill-wave"></i>
+        <h3>Free Forever</h3>
+        <p>Completely free service with no hidden costs</p>
+      </div>
+    </div>
+  </div>
+  
+  <footer>
+    <p>&copy; <span id="currentYear"></span> InstaFaceDownloader. All rights reserved.</p>
+    <p>This tool is not affiliated with Instagram or Facebook.</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
