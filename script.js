@@ -1,37 +1,33 @@
-document.getElementById('downloadBtn').addEventListener('click', async () => {
-  const platform = document.getElementById('platform').value;
-  const url = document.getElementById('url').value;
-  const quality = document.getElementById('quality').value;
+const API_BASE_URL = "https://instafacedownloader.onrender.com";
 
-  if (!url) {
-    alert('Please enter a valid URL');
-    return;
-  }
+document.getElementById("download-form").addEventListener("submit", async function (e) {
+  e.preventDefault();
 
-  const API_BASE = window.location.hostname === "localhost"
-    ? "http://localhost:3000"
-    : "https://instafacedownloader.onrender.com";
+  const platform = document.getElementById("platform").value;
+  const url = document.getElementById("video-url").value;
+  const quality = document.getElementById("video-quality").value;
+
+  const statusDiv = document.getElementById("status");
+  statusDiv.innerText = "Processing...";
 
   try {
-    const response = await fetch(`${API_BASE}/api/download`, {
-      method: 'POST',
+    const response = await fetch(`${API_BASE_URL}/api/download`, {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json'
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify({ platform, url, quality })
+      body: JSON.stringify({ platform, url, quality }),
     });
 
     const data = await response.json();
 
-    if (data.success && data.videoUrl) {
-      const downloadLink = document.getElementById('downloadLink');
-      downloadLink.href = data.videoUrl;
-      downloadLink.style.display = 'inline-block';
+    if (data.success) {
+      statusDiv.innerHTML = `<a href="${data.videoUrl}" target="_blank" download>Click here to download your video</a>`;
     } else {
-      alert(data.message || 'Failed to fetch video');
+      statusDiv.innerText = "Error: " + data.message;
     }
   } catch (error) {
-    console.error(error);
-    alert('Error while downloading video. Please try again.');
+    console.error("Fetch error:", error);
+    statusDiv.innerText = "❌ Error while downloading the video. Please try again later.";
   }
 });
