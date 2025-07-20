@@ -1,33 +1,33 @@
+// server.js
 const express = require('express');
-const axios = require('axios');
 const cors = require('cors');
-const path = require('path');
-
 const app = express();
-const PORT = process.env.PORT || 3000;
+const port = 3000;
 
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static('public')); // Optional: serve static files like index.html if needed
 
-// Example dummy API
-app.post('/api/download', async (req, res) => {
-  const { platform, url } = req.body;
+// Dummy download endpoint
+app.post('/api/download', (req, res) => {
+  const { platform, url, quality } = req.body;
 
-  // You can later replace this part with real scraping/downloader code
-  if (!url || !platform) {
-    return res.status(400).json({ success: false, message: 'Missing URL or platform' });
+  if (!platform || !url) {
+    return res.status(400).json({ success: false, message: 'Missing platform or URL' });
   }
 
-  // Simulated success response
+  // Simulate a video URL (normally you'd fetch the real one using youtube-dl or similar)
+  const dummyVideoUrl = `https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4`;
+
   return res.json({
     success: true,
-    videoUrl: `https://example.com/downloads/dummy_${platform}.mp4`,
-    message: 'Simulated download link',
+    videoUrl: dummyVideoUrl
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+// Start server
+app.listen(port, () => {
+  console.log(`✅ Server running at http://localhost:${port}`);
 });
+
