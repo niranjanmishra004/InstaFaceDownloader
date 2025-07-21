@@ -6,8 +6,8 @@ document.getElementById("download-form").addEventListener("submit", async functi
   const platform = document.getElementById("platform").value;
   const url = document.getElementById("video-url").value;
   const quality = document.getElementById("video-quality").value;
-
   const statusDiv = document.getElementById("status");
+
   statusDiv.innerText = "Processing...";
 
   try {
@@ -21,10 +21,20 @@ document.getElementById("download-form").addEventListener("submit", async functi
 
     const data = await response.json();
 
-    if (data.success) {
-      statusDiv.innerHTML = `<a href="${data.videoUrl}" target="_blank" download>Click here to download your video</a>`;
+    if (data.success && data.video && data.video.url) {
+      const videoUrl = data.video.url;
+
+      // Auto trigger download
+      const a = document.createElement("a");
+      a.href = videoUrl;
+      a.download = "video.mp4";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+      statusDiv.innerHTML = `<span style="color:green;">✅ Video is downloading...</span>`;
     } else {
-      statusDiv.innerText = "Error: " + data.message;
+      statusDiv.innerText = "❌ Error: " + (data.message || "Invalid response from server");
     }
   } catch (error) {
     console.error("Fetch error:", error);
