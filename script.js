@@ -1,41 +1,36 @@
-const API_BASE_URL = "https://instafacedownloader.onrender.com";
+document.getElementById("downloadForm").addEventListener("submit", function (e) {
+  e.preventDefault();
 
-document.getElementById("downloadBtn").addEventListener("click", async function () {
   const platform = document.getElementById("platform").value;
-  const url = document.getElementById("url").value;
-  const quality = document.getElementById("quality").value;
-  const statusDiv = document.getElementById("message");
+  const url = document.getElementById("urlInput").value;
+  const quality = "best"; // Can be made dynamic if needed
 
-  statusDiv.innerText = "Processing...";
-
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/download`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ platform, url, quality }),
-    });
-
-    const data = await response.json();
-
-    if (data.success && data.video && data.video.url) {
-      const videoUrl = data.video.url;
-
-      // Auto trigger download
-      const a = document.createElement("a");
-      a.href = videoUrl;
-      a.download = "video.mp4";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-
-      statusDiv.innerHTML = `<span style="color:green;">✅ Video is downloading...</span>`;
-    } else {
-      statusDiv.innerText = "❌ Error: " + (data.message || "Invalid response from server");
-    }
-  } catch (error) {
-    console.error("Fetch error:", error);
-    statusDiv.innerText = "❌ Error while downloading the video. Please try again later.";
+  if (!url) {
+    alert("❗Please enter a URL");
+    return;
   }
+
+  // 🟢 Use your Render backend link here!
+  fetch("https://your-render-app-name.onrender.com/api/download", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ platform, url, quality })
+  })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success && data.videoUrl) {
+        const downloadBtn = document.getElementById("downloadBtn");
+        downloadBtn.href = data.videoUrl;
+        downloadBtn.style.display = "inline-block";
+        downloadBtn.innerText = "⬇️ Download Video";
+      } else {
+        alert("❌ Failed to fetch video: " + (data.message || "Unknown error"));
+      }
+    })
+    .catch(error => {
+      console.error("Error:", error);
+      alert("❌ An error occurred while processing the request.");
+    });
 });
