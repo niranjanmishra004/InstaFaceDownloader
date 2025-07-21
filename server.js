@@ -1,46 +1,58 @@
-// server.js
 const express = require('express');
 const cors = require('cors');
+const { exec } = require('child_process');
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
-
-// ✅ Use dynamic port for production (e.g. Render)
 const port = process.env.PORT || 3000;
 
-// ✅ Middleware
-app.use(cors()); // Enable CORS for all origins
+app.use(cors());
 app.use(express.json());
-app.use(express.static('public')); // Optional: serve static frontend if needed
 
-// ✅ Test endpoint (optional for debug)
+// 📂 Serve downloaded videos from "downloads" folder
+const downloadsDir = path.join(__dirname, 'downloads');
+if (!fs.existsSync(downloadsDir)) fs.mkdirSync(downloadsDir);
+app.use('/downloads', express.static(downloadsDir));
+
+// ✅ Root check
 app.get('/', (req, res) => {
-  res.send('✅ InstaFaceDownloader Backend is running!');
+  res.send('✅ InstaFaceDownloader is running with yt-dlp!');
 });
 
-// ✅ Download endpoint
+// ✅ Video download endpoint
 app.post('/api/download', (req, res) => {
-  const { platform, url, quality } = req.body;
+  const { url } = req.body;
 
-  // Basic validation
-  if (!platform || !url) {
-    return res.status(400).json({
-      success: false,
-      message: 'Missing platform or URL',
-    });
+  if (!url) {
+    return res.status(400).json({ success: false, message: 'Missing video URL' });
   }
 
-  console.log(`📥 Download request received:\nPlatform: ${platform}\nURL: ${url}\nQuality: ${quality}`);
+  console.log(`📥 Download request received for: ${url}`);
 
-  // ⚠️ In real version: Fetch actual video URL using yt-dlp, puppeteer, etc.
-  const dummyVideoUrl = 'https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4';
+  // Generate a unique filename
+  const fileName = `video_${Date.now()}.mp4`;
+  const filePath = path.join(downloadsDir, fileName);
 
-  return res.json({
-    success: true,
-    videoUrl: dummyVideoUrl,
+  // yt-dlp command
+  const command = `yt-dlp -o "${filePath}" -f best "${url}"`;
+
+  exec(command, (error, stdout, stderr) => {
+    if (error) {
+      console.error(`❌ yt-dlp error: ${error.message}`);
+      return res.status(500).json({ success: false, message: 'Download failed', error: error.message });
+    }
+
+    console.log(`✅ Download complete: ${fileName}`);
+    return res.json({
+      success: true,
+      video: {
+        url: `/downloads/${fileName}`,
+      },
+    });
   });
 });
 
-// ✅ Start server
 app.listen(port, () => {
   console.log(`🚀 Server running at http://localhost:${port}`);
 });
