@@ -1,12 +1,10 @@
 const API_BASE_URL = "https://instafacedownloader.onrender.com";
 
-document.getElementById("download-form").addEventListener("submit", async function (e) {
-  e.preventDefault();
-
+document.getElementById("downloadBtn").addEventListener("click", async function () {
   const platform = document.getElementById("platform").value;
-  const url = document.getElementById("video-url").value;
-  const quality = document.getElementById("video-quality").value;
-  const statusDiv = document.getElementById("status");
+  const url = document.getElementById("url").value;
+  const quality = document.getElementById("quality").value;
+  const statusDiv = document.getElementById("message");
 
   statusDiv.innerText = "Processing...";
 
