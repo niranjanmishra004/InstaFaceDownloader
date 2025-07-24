@@ -1,8 +1,8 @@
 :root {
-  --primary-color: #4267B2; /* Facebook blue */
+  --primary-color: #193161; /* Facebook blue */
   --secondary-color: #E1306C; /* Instagram pink */
   --dark-color: #2d3748;
-  --light-color: #f7fafc;
+  --light-color: #093f63;
   --success-color: #48bb78;
   --error-color: #f56565;
 }
@@ -15,7 +15,7 @@
 }
 
 body {
-  background-color: #9bb3d7;
+  background-color: #5d7496a6;
   color: var(--dark-color);
   line-height: 1.6;
 }
@@ -101,33 +101,45 @@ button:active {
 
 #message {
   margin-top: 1.5rem;
-  padding: 1rem;
-  border-radius: 6px;
-  display: none;
+  min-height: 30px;
 }
 
-.success {
+#message .success {
   background-color: rgba(72, 187, 120, 0.1);
   color: var(--success-color);
   border: 1px solid var(--success-color);
+  padding: 1rem;
+  border-radius: 6px;
   display: block;
 }
 
-.error {
+#message .error {
   background-color: rgba(245, 101, 101, 0.1);
   color: var(--error-color);
   border: 1px solid var(--error-color);
+  padding: 1rem;
+  border-radius: 6px;
   display: block;
 }
 
-.loading {
+#message .loading {
+  background-color: rgba(237, 137, 54, 0.1);
+  color: #ed8936;
+  border: 1px solid #ed8936;
+  padding: 1rem;
+  border-radius: 6px;
+  display: block;
+}
+
+.loading-spinner {
   display: inline-block;
   width: 20px;
   height: 20px;
-  border: 3px solid rgba(255,255,255,.3);
+  border: 3px solid rgba(237, 137, 54, 0.3);
   border-radius: 50%;
-  border-top-color: white;
+  border-top-color: #ed8936;
   animation: spin 1s ease-in-out infinite;
+  margin-right: 8px;
 }
 
 @keyframes spin {
