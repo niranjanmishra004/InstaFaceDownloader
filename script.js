@@ -1,17 +1,54 @@
 // Set current year in footer
 document.getElementById('currentYear').textContent = new Date().getFullYear();
 
-// Test server connection on page load
+// Test server connection on page load with better diagnostics
 window.addEventListener('load', function() {
-  fetch('/api/status')
-    .then(response => response.json())
+  console.log('🔍 Testing server connection...');
+  console.log('🌐 Current URL:', window.location.href);
+  
+  fetch('/api/status', {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    },
+    credentials: 'same-origin'
+  })
+    .then(response => {
+      console.log('📡 Response status:', response.status);
+      console.log('📡 Response headers:', response.headers);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      return response.json();
+    })
     .then(data => {
       console.log('✅ Server connection OK:', data);
+      // Show success indicator
+      const messageDiv = document.getElementById('message');
+      messageDiv.innerHTML = '<div class="success">🟢 Server connected successfully</div>';
+      setTimeout(() => {
+        messageDiv.innerHTML = '';
+      }, 3000);
     })
     .catch(error => {
       console.error('❌ Server connection failed:', error);
+      console.error('❌ Error details:', error.message);
+      
       const messageDiv = document.getElementById('message');
-      messageDiv.innerHTML = '<div class="error">⚠️ Server connection issue. Please refresh the page or check if the server is running.</div>';
+      let errorMessage = '❌ Server connection failed. ';
+      
+      if (error.message.includes('TypeError')) {
+        errorMessage += 'The server might not be running or there might be a network issue.';
+      } else if (error.message.includes('404')) {
+        errorMessage += 'API endpoint not found. The server configuration might be incorrect.';
+      } else if (error.message.includes('500')) {
+        errorMessage += 'Internal server error. Please try again later.';
+      } else {
+        errorMessage += 'Please check your internet connection and try again.';
+      }
+      
+      messageDiv.innerHTML = `<div class="error">${errorMessage}</div>`;
     });
 });
 
